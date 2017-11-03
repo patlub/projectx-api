@@ -60,3 +60,4 @@ typings/
 .env
 
 .idea/
+client_secret.json
