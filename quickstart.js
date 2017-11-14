@@ -1,9 +1,8 @@
-
-
 const fs = require('fs');
 const readline = require('readline');
 const google = require('googleapis');
 const googleAuth = require('google-auth-library');
+const Request = require('request');
 
 // If modifying these scopes, delete your previously saved credentials
 // at ~/.credentials/sheets.googleapis.com-nodejs-quickstart.json
@@ -20,7 +19,7 @@ fs.readFile('client_secret.json', (err, content) => {
   }
   // Authorize a client with the loaded credentials, then call the
   // Google Sheets API.
-  authorize(JSON.parse(content), listMajors);
+  authorize(JSON.parse(content), getSheets);
 });
 
 /*
@@ -101,12 +100,14 @@ function storeToken(token) {
  * Print the names and majors of students in a sample spreadsheet:
  * https://docs.google.com/spreadsheets/d/1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms/edit
  */
-function listMajors(auth) {
-  const sheets = google.sheets('v4');
+function listMajors(auth, sheet) {
+    console.log('===================================================',sheet);
+
+    const sheets = google.sheets('v4');
   sheets.spreadsheets.values.get({
     auth,
     spreadsheetId: '1Cwg2AW6AYFSP3fs9z7K5xID8XFIg6R5KyF5WlqUVfqc',
-    range: 'UG Cohort 1-2!B2:G',
+    range: `${sheet}!B2:G`,
   }, (err, response) => {
     if (err) {
       console.log(`The API returned an error: ${err}`);
@@ -123,4 +124,21 @@ function listMajors(auth) {
       }
     }
   });
+}
+
+function getSheets(auth){
+    const sheets = google.sheets('v4');
+    sheets.spreadsheets.get({
+        auth,
+        spreadsheetId: '1Cwg2AW6AYFSP3fs9z7K5xID8XFIg6R5KyF5WlqUVfqc',
+        fields: sheets.properties
+    }, (err, response) => {
+        if (err) {
+            console.log(`The API returned an error: ${err}`);
+            return;
+        }
+        for (let sheet in response.sheets){
+            listMajors(auth, response.sheets[sheet].properties.title)
+        }
+    });
 }
